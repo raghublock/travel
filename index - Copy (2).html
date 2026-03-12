@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>Travel Expense PRO</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f4f6f9;
+padding:20px;
+}
+
+.header{
+margin-bottom:20px;
+}
+
+.header input{
+padding:6px;
+margin:5px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+}
+
+th,td{
+border:1px solid #ccc;
+padding:6px;
+text-align:center;
+}
+
+th{
+background:#2c3e50;
+color:white;
+}
+
+input,select{
+width:100%;
+border:none;
+text-align:center;
+}
+
+button{
+padding:6px 12px;
+margin:3px;
+background:#3498db;
+color:white;
+border:none;
+cursor:pointer;
+}
+
+.delete{
+background:#e74c3c;
+}
+
+.totalBox{
+font-size:18px;
+margin-top:10px;
+font-weight:bold;
+}
+
+.donation{
+margin-top:40px;
+padding:20px;
+background:white;
+border:1px solid #ddd;
+text-align:center;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+
+<b>M/s</b>
+<input type="text" value="Sarthak">
+
+<b>Month</b>
+<input type="month" id="month">
+
+<b>Travelling Exp</b>
+<input type="text">
+
+<button onclick="generateMonth()">Generate Month</button>
+
+</div>
+
+<table id="travelTable">
+
+<thead>
+
+<tr>
+
+<th>Date</th>
+<th>Day</th>
+<th>Description</th>
+<th>Mode</th>
+<th>KMs</th>
+<th>Rate</th>
+<th>Total</th>
+<th>+</th>
+<th>Delete</th>
+
+</tr>
+
+</thead>
+
+<tbody id="tableBody"></tbody>
+
+<tfoot>
+
+<tr>
+
+<td></td>
+<td></td>
+<td><b>PD Report</b></td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td><input type="number" id="pdReport" oninput="grandTotal()"></td>
+<td></td>
+<td></td>
+
+</tr>
+
+<tr>
+
+<td></td>
+<td></td>
+<td><b>Total</b></td>
+<td></td>
+<td></td>
+<td></td>
+<td id="finalTotal">0</td>
+<td></td>
+<td></td>
+
+</tr>
+
+</tfoot>
+
+</table>
+
+<div class="totalBox">
+
+Grand Total : ₹ <span id="grandTotal">0</span>
+
+</div>
+
+<button onclick="downloadExcel()">Download Excel</button>
+
+<div class="donation">
+
+<h3>Support / Donation ₹20</h3>
+
+<p>If this Travel Tool helps you, you can support with ₹20</p>
+
+<img id="upiQR" width="220">
+
+<br><br>
+
+<input id="upiId" value="raghubhati@slc" readonly style="width:220px;padding:6px;text-align:center">
+
+<br><br>
+
+<button onclick="copyUPI()">Copy UPI ID</button>
+
+<a href="upi://pay?pa=raghubhati@slc&pn=TravelTool&am=20&cu=INR">
+<button>Pay ₹20</button>
+</a>
+
+</div>
+
+<script>
+
+function generateMonth(){
+
+let month=document.getElementById("month").value;
+
+if(!month) return;
+
+let table=document.getElementById("tableBody");
+
+table.innerHTML="";
+
+let parts=month.split("-");
+
+let year=parts[0];
+
+let m=parts[1];
+
+let days=new Date(year,m,0).getDate();
+
+for(let i=1;i<=days;i++){
+
+let date=new Date(year,m-1,i);
+
+let day=date.toLocaleDateString("en-US",{weekday:"long"});
+
+let d=`${year}-${m}-${String(i).padStart(2,'0')}`;
+
+addRow(d,day);
+
+}
+
+}
+
+function addRow(date="",day=""){
+
+let table=document.getElementById("tableBody");
+
+let row=table.insertRow();
+
+row.innerHTML=`
+
+<td><input type="date" value="${date}" onchange="autoDay(this)"></td>
+
+<td class="day">${day}</td>
+
+<td>
+
+<select onchange="checkType(this)">
+
+<option>Bikaner</option>
+
+<option>Bikaner to Jaisalmer</option>
+<option>Jaisalmer to Bikaner</option>
+
+<option>Bikaner to Ganganagar</option>
+<option>Ganganagar to Bikaner</option>
+
+<option>Bikaner to Suratgarh</option>
+<option>Suratgarh to Bikaner</option>
+
+<option>Hotel + Food</option>
+<option>Bike Rent</option>
+
+</select>
+
+</td>
+
+<td>
+
+<select>
+
+<option>Bike</option>
+<option>Bus</option>
+<option>-</option>
+
+</select>
+
+</td>
+
+<td><input type="number" oninput="calc(this)"></td>
+
+<td class="rate">3</td>
+
+<td><input type="number" class="total" oninput="grandTotal()"></td>
+
+<td>
+
+<button onclick="addCustomRow(this)">+</button>
+
+</td>
+
+<td>
+
+<button class="delete" onclick="deleteRow(this)">X</button>
+
+</td>
+
+`;
+
+}
+
+function autoDay(input){
+
+let date=new Date(input.value);
+
+let day=date.toLocaleDateString("en-US",{weekday:"long"});
+
+input.parentElement.nextElementSibling.innerText=day;
+
+}
+
+function checkType(el){
+
+let row=el.parentElement.parentElement;
+
+let rate=row.querySelector(".rate");
+
+let mode=row.cells[3].querySelector("select");
+
+if(el.value=="Bikaner"){
+
+rate.innerText=3;
+
+mode.value="Bike";
+
+}
+
+else if(el.value=="Hotel + Food" || el.value=="Bike Rent"){
+
+rate.innerText="-";
+
+mode.value="-";
+
+}
+
+else{
+
+rate.innerText="-";
+
+mode.value="Bus";
+
+}
+
+}
+
+function calc(input){
+
+let row=input.parentElement.parentElement;
+
+let km=row.cells[4].querySelector("input").value;
+
+let rate=row.querySelector(".rate").innerText;
+
+if(rate=="-") return;
+
+let total=km*rate;
+
+row.querySelector(".total").value=total;
+
+grandTotal();
+
+}
+
+function addCustomRow(btn){
+
+let row=btn.parentElement.parentElement;
+
+let table=document.getElementById("tableBody");
+
+let newRow=table.insertRow(row.rowIndex);
+
+newRow.innerHTML=`
+
+<td><input type="date" onchange="autoDay(this)"></td>
+
+<td class="day"></td>
+
+<td>
+
+<select onchange="checkType(this)">
+
+<option>Hotel + Food</option>
+<option>Bike Rent</option>
+
+<option>Bikaner to Jaisalmer</option>
+<option>Jaisalmer to Bikaner</option>
+
+<option>Bikaner to Ganganagar</option>
+<option>Ganganagar to Bikaner</option>
+
+<option>Bikaner to Suratgarh</option>
+<option>Suratgarh to Bikaner</option>
+
+</select>
+
+</td>
+
+<td>-</td>
+
+<td>-</td>
+
+<td>-</td>
+
+<td><input type="number" class="total" oninput="grandTotal()"></td>
+
+<td></td>
+
+<td>
+
+<button class="delete" onclick="deleteRow(this)">X</button>
+
+</td>
+
+`;
+
+}
+
+function deleteRow(btn){
+
+btn.parentElement.parentElement.remove();
+
+grandTotal();
+
+}
+
+function grandTotal(){
+
+let totals=document.querySelectorAll(".total");
+
+let sum=0;
+
+totals.forEach(t=>{
+sum+=Number(t.value||0);
+});
+
+let pd=Number(document.getElementById("pdReport").value||0);
+
+document.getElementById("grandTotal").innerText=sum+pd;
+
+document.getElementById("finalTotal").innerText=sum+pd;
+
+}
+
+function downloadExcel(){
+
+let rows=document.querySelectorAll("#tableBody tr")
+
+let data=[]
+
+let monthInput=document.getElementById("month").value
+
+let monthText=""
+
+if(monthInput){
+
+let d=new Date(monthInput)
+
+let m=d.toLocaleString('default',{month:'short'})
+
+let y=String(d.getFullYear()).slice(2)
+
+monthText=`Month: ${m}'${y}`
+
+}
+
+data.push([monthText,"","","Travelling Exp.- Hritik  Bikaner Depot","","",""])
+
+data.push([])
+
+data.push(["Date","Day","Description","Mode","KMs","Rate","Total"])
+
+let grand=0
+
+rows.forEach(r=>{
+
+let date=r.cells[0].querySelector("input")?.value || ""
+
+if(date){
+
+let d=new Date(date)
+
+date=d.toLocaleDateString("en-GB")
+
+}
+
+let day=r.cells[1].innerText
+
+let desc=r.cells[2].querySelector("select")?.value || ""
+
+let mode=r.cells[3].querySelector("select")?.value || "-"
+
+let kms=r.cells[4].querySelector("input")?.value || "-"
+
+let rate=r.cells[5].innerText || "-"
+
+let total=r.cells[6].querySelector("input")?.value || ""
+
+grand+=Number(total||0)
+
+data.push([date,day,desc,mode,kms,rate,total])
+
+})
+
+let pd=document.getElementById("pdReport").value || 0
+
+data.push([])
+
+data.push(["","","PD Report","-","-","-",pd])
+
+data.push(["","","Total","","","",grand+Number(pd)])
+
+let ws=XLSX.utils.aoa_to_sheet(data)
+
+let wb=XLSX.utils.book_new()
+
+XLSX.utils.book_append_sheet(wb,ws,"Travel Report")
+
+XLSX.writeFile(wb,"travel_expense.xlsx")
+
+}
+
+function copyUPI(){
+
+let upi=document.getElementById("upiId");
+
+upi.select();
+
+navigator.clipboard.writeText(upi.value);
+
+alert("UPI ID Copied");
+
+}
+
+let upi="upi://pay?pa=raghubhati@slc&pn=TravelTool&am=20&cu=INR";
+
+document.getElementById("upiQR").src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data="+encodeURIComponent(upi);
+
+</script>
+
+</body>
+</html>
