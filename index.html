@@ -3,7 +3,9 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Travel Expense PRO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Travel Expense Tool</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
@@ -12,22 +14,31 @@
 body{
 font-family:Arial;
 background:#f4f6f9;
-padding:20px;
+padding:10px;
 }
 
 .header{
 margin-bottom:20px;
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+align-items:center;
 }
 
 .header input{
 padding:6px;
-margin:5px;
+}
+
+.table-container{
+width:100%;
+overflow-x:auto;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
 background:white;
+min-width:750px;
 }
 
 th,td{
@@ -45,15 +56,17 @@ input,select{
 width:100%;
 border:none;
 text-align:center;
+padding:6px;
 }
 
 button{
-padding:6px 12px;
+padding:8px 12px;
 margin:3px;
 background:#3498db;
 color:white;
 border:none;
 cursor:pointer;
+border-radius:4px;
 }
 
 .delete{
@@ -67,11 +80,28 @@ font-weight:bold;
 }
 
 .donation{
-margin-top:40px;
+margin-top:30px;
 padding:20px;
 background:white;
 border:1px solid #ddd;
 text-align:center;
+}
+
+@media (max-width:768px){
+
+.header{
+flex-direction:column;
+align-items:flex-start;
+}
+
+.header input{
+width:100%;
+}
+
+button{
+width:100%;
+}
+
 }
 
 </style>
@@ -95,12 +125,13 @@ text-align:center;
 
 </div>
 
+<div class="table-container">
+
 <table id="travelTable">
 
 <thead>
 
 <tr>
-
 <th>Date</th>
 <th>Day</th>
 <th>Description</th>
@@ -110,7 +141,6 @@ text-align:center;
 <th>Total</th>
 <th>+</th>
 <th>Delete</th>
-
 </tr>
 
 </thead>
@@ -120,7 +150,6 @@ text-align:center;
 <tfoot>
 
 <tr>
-
 <td></td>
 <td></td>
 <td><b>PD Report</b></td>
@@ -130,11 +159,9 @@ text-align:center;
 <td><input type="number" id="pdReport" oninput="grandTotal()"></td>
 <td></td>
 <td></td>
-
 </tr>
 
 <tr>
-
 <td></td>
 <td></td>
 <td><b>Total</b></td>
@@ -144,17 +171,16 @@ text-align:center;
 <td id="finalTotal">0</td>
 <td></td>
 <td></td>
-
 </tr>
 
 </tfoot>
 
 </table>
 
+</div>
+
 <div class="totalBox">
-
 Grand Total : ₹ <span id="grandTotal">0</span>
-
 </div>
 
 <button onclick="downloadExcel()">Download Excel</button>
@@ -165,17 +191,17 @@ Grand Total : ₹ <span id="grandTotal">0</span>
 
 <p>If this Travel Tool helps you, you can support with ₹20</p>
 
-<img id="upiQR" width="220">
+<img id="upiQR" width="200">
 
 <br><br>
 
-<input id="upiId" value="raghubhati@slc" readonly style="width:220px;padding:6px;text-align:center">
+<input id="upiId" value="8740871855@ptsbi" readonly style="width:220px;padding:6px;text-align:center">
 
 <br><br>
 
 <button onclick="copyUPI()">Copy UPI ID</button>
 
-<a href="upi://pay?pa=raghubhati@slc&pn=TravelTool&am=20&cu=INR">
+<a href="upi://pay?pa=8740871855@ptsbi&pn=TravelTool&am=20&cu=INR">
 <button>Pay ₹20</button>
 </a>
 
@@ -252,11 +278,9 @@ row.innerHTML=`
 <td>
 
 <select>
-
 <option>Bike</option>
 <option>Bus</option>
 <option>-</option>
-
 </select>
 
 </td>
@@ -268,15 +292,11 @@ row.innerHTML=`
 <td><input type="number" class="total" oninput="grandTotal()"></td>
 
 <td>
-
 <button onclick="addCustomRow(this)">+</button>
-
 </td>
 
 <td>
-
 <button class="delete" onclick="deleteRow(this)">X</button>
-
 </td>
 
 `;
@@ -304,7 +324,6 @@ let mode=row.cells[3].querySelector("select");
 if(el.value=="Bikaner"){
 
 rate.innerText=3;
-
 mode.value="Bike";
 
 }
@@ -312,7 +331,6 @@ mode.value="Bike";
 else if(el.value=="Hotel + Food" || el.value=="Bike Rent"){
 
 rate.innerText="-";
-
 mode.value="-";
 
 }
@@ -320,7 +338,6 @@ mode.value="-";
 else{
 
 rate.innerText="-";
-
 mode.value="Bus";
 
 }
@@ -362,27 +379,14 @@ newRow.innerHTML=`
 <td>
 
 <select onchange="checkType(this)">
-
 <option>Hotel + Food</option>
 <option>Bike Rent</option>
-
-<option>Bikaner to Jaisalmer</option>
-<option>Jaisalmer to Bikaner</option>
-
-<option>Bikaner to Ganganagar</option>
-<option>Ganganagar to Bikaner</option>
-
-<option>Bikaner to Suratgarh</option>
-<option>Suratgarh to Bikaner</option>
-
 </select>
 
 </td>
 
 <td>-</td>
-
 <td>-</td>
-
 <td>-</td>
 
 <td><input type="number" class="total" oninput="grandTotal()"></td>
@@ -390,9 +394,7 @@ newRow.innerHTML=`
 <td></td>
 
 <td>
-
 <button class="delete" onclick="deleteRow(this)">X</button>
-
 </td>
 
 `;
@@ -431,26 +433,6 @@ let rows=document.querySelectorAll("#tableBody tr")
 
 let data=[]
 
-let monthInput=document.getElementById("month").value
-
-let monthText=""
-
-if(monthInput){
-
-let d=new Date(monthInput)
-
-let m=d.toLocaleString('default',{month:'short'})
-
-let y=String(d.getFullYear()).slice(2)
-
-monthText=`Month: ${m}'${y}`
-
-}
-
-data.push([monthText,"","","Travelling Exp.- Hritik  Bikaner Depot","","",""])
-
-data.push([])
-
 data.push(["Date","Day","Description","Mode","KMs","Rate","Total"])
 
 let grand=0
@@ -488,9 +470,7 @@ data.push([date,day,desc,mode,kms,rate,total])
 let pd=document.getElementById("pdReport").value || 0
 
 data.push([])
-
 data.push(["","","PD Report","-","-","-",pd])
-
 data.push(["","","Total","","","",grand+Number(pd)])
 
 let ws=XLSX.utils.aoa_to_sheet(data)
@@ -515,7 +495,7 @@ alert("UPI ID Copied");
 
 }
 
-let upi="upi://pay?pa=raghubhati@slc&pn=TravelTool&am=20&cu=INR";
+let upi="upi://pay?pa=8740871855@ptsbi&pn=TravelTool&am=20&cu=INR";
 
 document.getElementById("upiQR").src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data="+encodeURIComponent(upi);
 
